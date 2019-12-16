@@ -1,8 +1,11 @@
 package com.periscope.assignment.controller;
 
+import com.periscope.assignment.dto.RealmDto;
+import com.periscope.assignment.exception.RealmNotFoundException;
 import com.periscope.assignment.model.ErrorModel;
 import com.periscope.assignment.model.RealmModel;
 import com.periscope.assignment.service.RealmService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,14 +24,18 @@ public class RealmController {
             errorModel.setCode("InvalidRealmName");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorModel);
         }
+        RealmDto realmDto = new RealmDto();
         if(!realmService.existByName(realmModel.getName())){
-            realmModel = realmService.createStore(realmModel);
+            BeanUtils.copyProperties(realmModel,realmDto);
+            realmDto = realmService.createRealm(realmDto);
         }else{
             ErrorModel errorModel = new ErrorModel();
             errorModel.setCode("DuplicateRealmName");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorModel);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(realmModel);
+        RealmModel realmModelResponse = new RealmModel();
+        BeanUtils.copyProperties(realmDto,realmModelResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(realmModelResponse);
     }
 
     @GetMapping(value = "/realm/{id}")
@@ -41,13 +48,21 @@ public class RealmController {
             errorModel.setCode("InvalidArgument");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorModel);
         }
-        RealmModel realmModel = realmService.getById(longId);
-        if(realmModel == null){
+        RealmDto realmDto = realmService.getById(longId);
+        if(realmDto == null){
             ErrorModel errorModel = new ErrorModel();
             errorModel.setCode("RealmNotFound");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorModel);
         }
-        return ResponseEntity.ok().body(realmModel);
+        RealmModel realmModelResponse = new RealmModel();
+        BeanUtils.copyProperties(realmDto,realmModelResponse);
+        return ResponseEntity.ok().body(realmModelResponse);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    private void realmNotFoundHandler(RealmNotFoundException e){
+
     }
 
 }

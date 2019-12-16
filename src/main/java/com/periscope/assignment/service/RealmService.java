@@ -1,9 +1,9 @@
 package com.periscope.assignment.service;
 
-import com.periscope.assignment.model.RealmModel;
+import com.periscope.assignment.dto.RealmDto;
 
 public interface RealmService {
-    RealmModel getById(long id);
-    RealmModel createStore(RealmModel realmModel);
+    RealmDto getById(long id);
+    RealmDto createRealm(RealmDto realmDto);
     boolean existByName(String name);
 }

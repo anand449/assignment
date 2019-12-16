@@ -16,6 +16,16 @@ public class RealmModel implements Serializable {
     @XmlElement
     private String key;
 
+    public RealmModel(long id, String name, String description, String key) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.key = key;
+    }
+
+    public RealmModel() {
+    }
+
     public long getId() {
         return id;
     }
