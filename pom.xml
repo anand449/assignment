@@ -12,7 +12,8 @@
 	<artifactId>assignment</artifactId>
 	<version>1.0</version>
 	<name>assignment</name>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
+	<!--<packaging>war</packaging>-->
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
