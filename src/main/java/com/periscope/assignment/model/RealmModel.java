@@ -23,6 +23,11 @@ public class RealmModel implements Serializable {
         this.key = key;
     }
 
+    public RealmModel(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
     public RealmModel() {
     }
 

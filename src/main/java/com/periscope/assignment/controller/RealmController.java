@@ -1,8 +1,9 @@
 package com.periscope.assignment.controller;
 
 import com.periscope.assignment.dto.RealmDto;
+import com.periscope.assignment.exception.InvalidArgumentException;
+import com.periscope.assignment.exception.RealmBadRequestException;
 import com.periscope.assignment.exception.RealmNotFoundException;
-import com.periscope.assignment.model.ErrorModel;
 import com.periscope.assignment.model.RealmModel;
 import com.periscope.assignment.service.RealmService;
 import org.springframework.beans.BeanUtils;
@@ -18,51 +19,54 @@ public class RealmController {
     @Autowired
     RealmService realmService;
     @PostMapping(value = "/realm",produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Object> createRealm(@RequestBody RealmModel realmModel){
+    public ResponseEntity<Object> createRealm(@RequestBody RealmModel realmModel) throws RealmBadRequestException {
         if(realmModel.getName()==null || realmModel.getName().isEmpty()){
-            ErrorModel errorModel = new ErrorModel();
-            errorModel.setCode("InvalidRealmName");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorModel);
+            throw new RealmBadRequestException("InvalidRealmName");
         }
         RealmDto realmDto = new RealmDto();
-        if(!realmService.existByName(realmModel.getName())){
-            BeanUtils.copyProperties(realmModel,realmDto);
-            realmDto = realmService.createRealm(realmDto);
-        }else{
-            ErrorModel errorModel = new ErrorModel();
-            errorModel.setCode("DuplicateRealmName");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorModel);
+        if(realmService.existByName(realmModel.getName())){
+            throw new RealmBadRequestException("DuplicateRealmName");
         }
+        BeanUtils.copyProperties(realmModel,realmDto);
+        realmDto = realmService.createRealm(realmDto);
         RealmModel realmModelResponse = new RealmModel();
         BeanUtils.copyProperties(realmDto,realmModelResponse);
         return ResponseEntity.status(HttpStatus.CREATED).body(realmModelResponse);
     }
 
-    @GetMapping(value = "/realm/{id}")
-    public ResponseEntity<Object> getRealm(@PathVariable(value = "id") String id){
-        long longId = 0;
+    @GetMapping(value = "/realm/{id}",produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Object> getRealm(@PathVariable(value = "id") String id) throws RealmNotFoundException, InvalidArgumentException {
+        Long longId ;
         try {
             longId = Long.parseLong(id);
-        }catch (Exception e){
-            ErrorModel errorModel = new ErrorModel();
-            errorModel.setCode("InvalidArgument");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorModel);
+        }
+        catch(NumberFormatException e) {
+            throw new InvalidArgumentException("InvalidArgument");
         }
         RealmDto realmDto = realmService.getById(longId);
-        if(realmDto == null){
-            ErrorModel errorModel = new ErrorModel();
-            errorModel.setCode("RealmNotFound");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorModel);
+        if(realmDto== null || realmDto.getName().isEmpty()) {
+            throw new RealmNotFoundException("RealmNotFound");
         }
         RealmModel realmModelResponse = new RealmModel();
         BeanUtils.copyProperties(realmDto,realmModelResponse);
         return ResponseEntity.ok().body(realmModelResponse);
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    private void realmNotFoundHandler(RealmNotFoundException e){
-
+    @DeleteMapping(value = "/realm/{id}",produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Long> deleteRealm(@PathVariable(value = "id") String id) throws RealmNotFoundException, InvalidArgumentException {
+        Long longId ;
+        try {
+            longId = Long.parseLong(id);
+        }
+        catch(NumberFormatException e) {
+            throw new InvalidArgumentException("InvalidArgument");
+        }
+        RealmDto realmDto = realmService.getById(longId);
+        if(realmDto== null || realmDto.getName().isEmpty()) {
+            throw new RealmNotFoundException("RealmNotFound");
+        }
+        realmService.deleteById(longId);
+        return ResponseEntity.ok().body(longId);
     }
 
 }

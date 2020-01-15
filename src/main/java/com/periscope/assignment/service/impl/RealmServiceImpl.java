@@ -23,7 +23,7 @@ public class RealmServiceImpl implements RealmService {
     }
 
     @Override
-    public RealmDto getById(long id){
+    public RealmDto getById(long id) {
         RealmDto realmDto = new RealmDto();
         Optional<RealmEntity> realmEntityStream = realmRepository.findById(id);
         if(!realmEntityStream.isPresent()){
@@ -31,6 +31,12 @@ public class RealmServiceImpl implements RealmService {
         }
         BeanUtils.copyProperties(realmEntityStream.get(), realmDto);
         return realmDto;
+    }
+
+    @Override
+    public long deleteById(long id) {
+        realmRepository.deleteById(id);
+        return id;
     }
 
     @Override
