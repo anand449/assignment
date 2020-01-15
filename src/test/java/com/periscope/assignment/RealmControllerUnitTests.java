@@ -1,72 +1,66 @@
 package com.periscope.assignment;
 
+import com.periscope.assignment.controller.RealmController;
 import com.periscope.assignment.dto.RealmDto;
-import com.periscope.assignment.entity.RealmEntity;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import com.periscope.assignment.repository.RealmRepository;
+import com.periscope.assignment.exception.InvalidArgumentException;
+import com.periscope.assignment.exception.RealmBadRequestException;
+import com.periscope.assignment.exception.RealmNotFoundException;
+import com.periscope.assignment.model.RealmModel;
 import com.periscope.assignment.service.RealmService;
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
-import java.util.Optional;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration( classes = TestConfiguration.class )
+@ExtendWith(MockitoExtension.class)
+@RunWith(JUnitPlatform.class)
 public class RealmControllerUnitTests {
-    @Mock
-    RealmRepository realmRepository;
-    @Autowired
+
     @InjectMocks
+    RealmController realmController;
+
+    @Mock
     RealmService realmService;
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
+
+    @Test
+    public void createRealm() throws RealmBadRequestException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        RealmDto mockRealm = new RealmDto();
+        when(realmService.createRealm(any(RealmDto.class))).thenReturn(mockRealm);
+        RealmModel newRealm = new RealmModel();
+        newRealm.setName("realmNameU1");
+        newRealm.setDescription("realmDescriptionU1");
+        newRealm.setKey("realmNameU1 | realmDescriptionU1");
+        ResponseEntity<Object> responseEntity = realmController.createRealm(newRealm);
+        assertThat(responseEntity.getStatusCodeValue()).isEqualTo(201);
     }
 
     @Test
-    public void createRealm() {
-        RealmEntity realmEntity = new RealmEntity();
-        realmEntity.setName("realmNameU1");
-        realmEntity.setDescription("realmDescU1");
-        realmEntity.setKey("realmNameU1 | realmDescU1");
-        when( realmRepository.save(any(RealmEntity.class) ) ).thenReturn(realmEntity );
-        RealmDto realmDto = new RealmDto();
-        realmDto.setName("realmNameU1");
-        realmDto.setDescription("realmDescU1");
-        realmDto.setKey("realmNameU1 | realmDescU1");
-        RealmDto result = realmService.createRealm(realmDto);
-        // Assert expected results
-        Assert.assertNotNull( result );
-        Assert.assertEquals( realmEntity.getName() , result.getName() );
-        Assert.assertEquals( realmEntity.getDescription() , result.getDescription() );
-        Assert.assertEquals( realmEntity.getKey() , result.getKey() );
+    public void getRealm() throws RealmNotFoundException, InvalidArgumentException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        long newId = 1;
+        RealmDto newRealm = new RealmDto();
+        newRealm.setId(newId);
+        newRealm.setName("realmNameU2");
+        newRealm.setDescription("realmDescriptionU2");
+        realmService.createRealm(newRealm);
+        when(realmService.getById(newId)).thenReturn(newRealm);
+        ResponseEntity<Object> responseEntity = realmController.getRealm(String.valueOf(newId));
+        assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+        assertThat(((RealmModel) Objects.requireNonNull(responseEntity.getBody())).getKey())
+                .isEqualTo(newRealm.getKey());
     }
-
-    @Test
-    public void getRealm() {
-        RealmEntity realmEntity = new RealmEntity();
-        realmEntity.setName("realmNameU1");
-        realmEntity.setDescription("realmDescU1");
-        realmEntity.setKey("realmNameU1 | realmDescU1");
-        when( realmRepository.findById(any(Long.class) ) ).thenReturn(Optional.of(realmEntity) );
-        RealmDto result = realmService.getById(5);
-        // Assert expected results
-        Assert.assertNotNull( result );
-        Assert.assertEquals( realmEntity.getName() , result.getName() );
-        Assert.assertEquals( realmEntity.getDescription() , result.getDescription() );
-        Assert.assertEquals( realmEntity.getKey() , result.getKey() );
-    }
-
-
-
 }

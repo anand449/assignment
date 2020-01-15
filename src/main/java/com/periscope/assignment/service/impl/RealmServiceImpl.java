@@ -12,45 +12,46 @@ import java.util.Optional;
 
 @Service("realmService")
 public class RealmServiceImpl implements RealmService {
-    @Autowired
-    RealmRepository realmRepository;
+	@Autowired
+	RealmRepository realmRepository;
 
-    public RealmServiceImpl(RealmRepository realmRepository) {
-        this.realmRepository = realmRepository;
-    }
+	public RealmServiceImpl(RealmRepository realmRepository) {
+		this.realmRepository = realmRepository;
+	}
 
-    public RealmServiceImpl() {
-    }
+	public RealmServiceImpl() {
+	}
 
-    @Override
-    public RealmDto getById(long id) {
-        RealmDto realmDto = new RealmDto();
-        Optional<RealmEntity> realmEntityStream = realmRepository.findById(id);
-        if(!realmEntityStream.isPresent()){
-            return null;
-        }
-        BeanUtils.copyProperties(realmEntityStream.get(), realmDto);
-        return realmDto;
-    }
+	@Override
+	public RealmDto getById(long id) {
+		RealmDto realmDto = new RealmDto();
+		Optional<RealmEntity> realmEntityStream = realmRepository.findById(id);
+		if (!realmEntityStream.isPresent()) {
+			return null;
+		}
+		BeanUtils.copyProperties(realmEntityStream.get(), realmDto);
+		return realmDto;
+	}
 
-    @Override
-    public long deleteById(long id) {
-        realmRepository.deleteById(id);
-        return id;
-    }
+	@Override
+	public long deleteById(long id) {
+		realmRepository.deleteById(id);
+		realmRepository.flush();
+		return id;
+	}
 
-    @Override
-    public boolean existByName(String name){
-        return realmRepository.existByName(name);
-    }
+	@Override
+	public boolean existByName(String name) {
+		return realmRepository.existByName(name);
+	}
 
-    @Override
-    public RealmDto createRealm(RealmDto realmDto) {
-        realmDto.setKey(realmDto.getName() +" | "+ realmDto.getDescription());
-        RealmEntity realmEntity = new RealmEntity();
-        BeanUtils.copyProperties(realmDto,realmEntity);
-        realmRepository.save(realmEntity);
-        realmDto.setId(realmEntity.getId());
-        return realmDto;
-    }
+	@Override
+	public RealmDto createRealm(RealmDto realmDto) {
+		realmDto.setKey(realmDto.getName() + " | " + realmDto.getDescription());
+		RealmEntity realmEntity = new RealmEntity();
+		BeanUtils.copyProperties(realmDto, realmEntity);
+		realmRepository.save(realmEntity);
+		realmDto.setId(realmEntity.getId());
+		return realmDto;
+	}
 }
